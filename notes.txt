@@ -1,0 +1,65 @@
+taffy project notes
+
+each line item is a function to parse a state
+? Parseif >> if( -> ParseBoolExpr >>  expr ){ -> ParseBlock >> ...
+| else ParseElse
+?| elseif
+?? ParseSwitch-> ParseCase >>
+@ ParseLoop -> for / while
+// comment
+/* delimited comment - possibly multi-line */
+Id public identifier. Type is inferred if possible or--
+type suffixes are used.
+$ string
+# int 8/16/32/64  --  0x hex, 08\ oct, 0b binary, 036\ base 36 etc
+#. float 32/64
+#c complex
+() function --type not inferred
+* pointer
+? bool
+[const int] or [] array
+[*{walks}] list -- type of list or tree depends on node interface
+[type:type] map  ex. ident[$:udt]
+{} tuple
+interface -- passed as type in braces-- declare a func that takes a prints interface type as an arg f({Prints}, {Compares}, #) ?
+type creates a user defined type which is like a Go struct.  Methods are added outside of definition by using type.method() syntax.  Global/Public fields start with Cap.  Private to module fields start with lowercase. Private to type fields start with _.  Private fields can have getters and setters auto defined by (appending -rw) so that Field = val would set _field to val by generating a call to Set__field(val). Likewise val = Field would generate Get__field().  If more functionality is needed then custom getters/setters can be defined by hand just as any method.  Custom g/s can use the assignment syntax eg. val = Field or Field = val, p1, p2.
+Prints {interface}
+    String()$
+
+MyType type
+    _myField#-r //readonly default size int64
+    ourField#.-rw // read/write default float64
+    EveryonesField$ // string global scope if type has global scope else error
+
+MyType.String()$ //implementing {Prints}
+    ret EveryOnesField + ' uses ' + _myField
+
+MyType.Set__myField(val#, xform(#)#)
+    _myField = xform(val)
+
+MyType.Set_ourField(val#.32)
+    ourField = #.64(val)
+
+MyType.Get_ourField(fr {Xlates})
+    ret fr.Xlate(ourField)
+
+mod MyApp
+pkg main
+use (
+    cli
+    os.fs
+    error
+    path/to/resource.errors
+)
+
+main()#
+    cmd = cli.NewCmd()
+    ? cmd.Len <= 1
+        error.Fatal(errors.ErrMsg(NO_CMDLINE_ARGS))
+    i = 1
+    @
+        cmd[i].Execute()
+        ? i < cmd.Len
+            cont
+
+    ret 0
